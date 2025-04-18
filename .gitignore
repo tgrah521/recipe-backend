@@ -1,0 +1,14 @@
+.env
+*.key
+*.pem
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
