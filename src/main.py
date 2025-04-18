@@ -22,8 +22,11 @@ def get_db_connection():
         host=os.getenv("DB_HOST"),
         port=os.getenv("DB_PORT")
     )
+@app.route('/api', methods=['GET'])
+def say_hi():
+    return "hello"
 
-@app.route('/all_meals', methods=['GET'])
+@app.route('/api/all_meals', methods=['GET'])
 def get_all_meals():
     try:
         # Verbindung zur Datenbank herstellen
@@ -51,7 +54,7 @@ def get_all_meals():
         return jsonify({"error": f"Datenbankfehler: {str(e)}"}), 500
 
 
-@app.route('/meal/<int:meal_id>', methods=['GET'])
+@app.route('/api/meal/<int:meal_id>', methods=['GET'])
 def get_meal_by_id(meal_id):
     try:
         conn = get_db_connection()
@@ -91,7 +94,7 @@ def get_meal_by_id(meal_id):
         return jsonify({"error": f"Datenbankfehler: {str(e)}"}), 500
 
 
-@app.route('/add_meal', methods=['POST'])
+@app.route('/api/add_meal', methods=['POST'])
 def add_meal():
     try:
         data = request.get_json()  # Holt die Daten aus dem Request-Body
@@ -146,12 +149,6 @@ def add_meal():
             
 
 
-            cur.execute("""
-    INSERT INTO meal_ingredients (meal_id, ingredient_id, amount, unit)
-    VALUES (%s, %s, %s, %s)
-""", (meal_id, ingredient_id, amount, unit))
-
-
         conn.commit()  # Bestätigt alle Änderungen
         cur.close()
         conn.close()
@@ -162,5 +159,5 @@ def add_meal():
         return jsonify({"error": f"Datenbankfehler: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    cors = CORS(app, resources={r"/*": {"origins": "*"}})
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True) 
+
