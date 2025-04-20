@@ -22,9 +22,43 @@ def get_db_connection():
         host=os.getenv("DB_HOST"),
         port=os.getenv("DB_PORT")
     )
-@app.route('/api', methods=['GET'])
-def say_hi():
-    return "hello"
+
+@app.route('api/search_meals', methods=['POST'])
+def search_by_meals():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()        
+
+        mealname = request.args.get('mealname', default=None)
+
+        query = """
+            SELECT m.id, m.mealname, m.note, m.stars, 
+            STRING_AGG(i.ingredient || ' (' || mi.amount || ' ' || mi.unit || ')', ', ') AS ingredients
+            FROM meals m
+            LEFT JOIN meal_ingredients mi ON m.id = mi.meal_id
+            LEFT JOIN ingredients i ON mi.ingredient_id = i.id
+        """
+        params = []
+
+        if mealname:
+            query += " WHERE m.mealname ILIKE %s"
+            params.append(f"%{mealname}%")  # % für Teilübereinstimmung (LIKE)
+
+        query += """
+            GROUP BY m.id, m.mealname, m.note, m.stars
+            ORDER BY m.id;
+        """
+
+        cur.execute(query, params)
+        meals = [Meal.from_db_row(row) for row in cur.fetchall()]
+
+        cur.close()
+        conn.close()
+
+        return jsonify([meal.to_dict() for meal in meals])
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/all_meals', methods=['GET'])
 def get_all_meals():
